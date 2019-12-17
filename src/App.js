@@ -11,7 +11,8 @@ class App extends Component {
   )
 
   state = {
-    text: ''
+    text: '',
+    gamerooms: []
   }
 
   componentDidMount () {
@@ -20,7 +21,29 @@ class App extends Component {
 
       const action = JSON.parse(data)
 
-      console.log(action)
+      console.log('action test:', action)
+
+      const { type, payload } = action
+
+      switch (type) {
+        case 'ALL_GAMEROOMS': {
+          return this.setState({
+            gamerooms: payload
+          })
+        }
+        case 'NEW_GAMEROOM': {
+          const gamerooms = [
+            ...this.state.gamerooms,
+            payload
+          ]
+
+          return this.setState({
+            gamerooms
+          })
+        }
+        default:
+          console.log('Ignore:', type)
+      }
     }
   }
 
@@ -53,17 +76,52 @@ class App extends Component {
     this.setState({ text: value })
   }
 
+  onClick = async (gameroomId) => {
+    console.log('gameroomId test:', gameroomId)
+    try {
+      const response = await superagent
+        .put(`${this.url}/join`)
+        .send({
+          gameroomId,
+          userId: 1
+        })
+
+      console.log(
+        'response test:', response
+      )
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   render () {
-    return <form
-      onSubmit={this.onSubmit}
-    >
-      <input
-        type='text'
-        onChange={this.onChange}
-        value={this.state.text}
-      />
-      <button>Submit</button>
-    </form>
+    const { gamerooms } = this.state
+
+    const list = gamerooms
+      .map(gameroom => <div
+        key={gameroom.id}
+      >
+        {gameroom.name}
+        <button
+          onClick={
+            () => this.onClick(gameroom.id)
+          }
+        >Join</button>
+      </div>)
+
+    return <main>
+      <form
+        onSubmit={this.onSubmit}
+      >
+        <input
+          type='text'
+          onChange={this.onChange}
+          value={this.state.text}
+        />
+        <button>Submit</button>
+      </form>
+      {list}
+    </main>
   }
 }
 
